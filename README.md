@@ -1,7 +1,7 @@
 # JavaScript Web Application Tutorial
 A commit-by-commit walkthrough of how to bootstrap a JavaScript web application.
 
-## Getting Started
+## Prerequisites
 
 ### Install Node.js
 On Linux or OSX, a current version of Node.js should be available via package
@@ -37,3 +37,36 @@ quickly in version 3.
 #### References
 - [npm v3 Dependency Resolution](https://docs.npmjs.com/how-npm-works/npm3)
 - [Seems like babel-node is running very slow.](https://github.com/babel/babel/issues/2706)
+
+## Creating a New Project
+Initialize a Git repository:
+
+```sh
+mkdir project
+cd !$
+git init
+```
+
+In order to leverage npm to manage external dependencies, a `package.json` must
+be created in the root directory of the project:
+
+```json
+{
+  "name": "project",
+  "private": true
+}
+```
+
+The `private` flag indicates to npm that this project is not meant to be
+published as an npm package and suppresses warnings about missing values that
+are specific to npm packages.
+
+Make an initial commit:
+
+```sh
+git add -A
+git commit -m 'Initial Commit'
+```
+
+### References
+- [package.json](https://docs.npmjs.com/files/package.json)

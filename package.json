@@ -1,4 +1,10 @@
 {
   "name": "project",
-  "private": true
+  "private": true,
+  "scripts": {
+    "test": "ava"
+  },
+  "devDependencies": {
+    "ava": "^0.16.0"
+  }
 }

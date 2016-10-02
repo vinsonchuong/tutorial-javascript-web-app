@@ -64,7 +64,7 @@ are specific to npm packages.
 Many npm packages depend on a large number of other packages, themselves having
 even more dependencies. The `node_modules` directory will typically consist of
 several hundred megabytes of small files. It is important to exclude that
-directory from the repository. Create a `.gitignore` containing
+directory from the repository. Create a `.gitignore` containing:
 
 ```
 /node_modules
@@ -127,7 +127,7 @@ Then, add the `ava` command as the `test` script to the `package.json`:
 All continuous integration services that support Node.js applications will
 default to running the `test` script.
 
-Create a new test in `test/static.js`
+Create a new test in `test/static.js`:
 
 ```js
 import test from 'ava';
@@ -137,13 +137,13 @@ test((t) => {
 });
 ```
 
-By default, AVA will look for test cases in the `test` directory.
-
-Run the tests with
+Run the test with
 
 ```sh
 npm test
 ```
+
+By default, AVA will run all test cases found within the `test` directory.
 
 Commit these changes
 

@@ -137,7 +137,7 @@ test((t) => {
 });
 ```
 
-Run the test with
+Run the test with:
 
 ```sh
 npm test
@@ -145,7 +145,7 @@ npm test
 
 By default, AVA will run all test cases found within the `test` directory.
 
-Commit these changes
+Commit these changes:
 
 ```sh
 git add -A

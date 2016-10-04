@@ -2,9 +2,12 @@
   "name": "project",
   "private": true,
   "scripts": {
-    "test": "ava"
+    "test": "ava",
+    "start": "static"
   },
   "devDependencies": {
-    "ava": "^0.16.0"
+    "ava": "^0.16.0",
+    "node-static": "^0.7.9",
+    "phantomjs-adapter": "0.0.4"
   }
 }

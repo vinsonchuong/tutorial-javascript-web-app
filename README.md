@@ -205,7 +205,7 @@ export default class {
 
 An adapter that encapsulates communication with a browser can be implemented
 using the same strategy. An example implementation has been published as
-[phantomjs-adapter](https://github.com/vinsonchuong/phantomjs-adapter)
+[phantomjs-adapter](https://github.com/vinsonchuong/phantomjs-adapter).
 
 In this tutorial, for ease of getting started, we will use phantomjs-adapter.
 Note that phantomjs-adapter is still not very mature and that there are more
@@ -296,6 +296,11 @@ Create an `index.html` containing:
 <meta charset="utf-8">
 <p>Hello World!</p>
 ```
+
+The doctype indicates which HTML spec the file conforms to, in this case HTML5.
+The charset roughly indicates which spoken language is used in the text content
+of the file. Note that in HTML, the `<html>`, `<head>`, and `<body>` tags are
+all optional.
 
 If we re-run the test, this time it should pass.
 

@@ -176,7 +176,7 @@ server that can be copied into `test/static.js`:
 ```js
 import {spawn} from 'child_process';
 
-export default class {
+class Server {
   async start() {
     this.process = spawn('npm', ['start']);
     await new Promise((resolve, reject) => {

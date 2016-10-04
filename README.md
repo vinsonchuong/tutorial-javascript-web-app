@@ -99,7 +99,8 @@ logic to be tested more easily, but are not well supported in the established
 testing frameworks.
 
 In this tutorial, we'll write tests using AVA, which supports the newer
-JavaScript features but does not support running tests in the browser.
+JavaScript features but does not support running tests in the browser. AVA also
+runs tests in parallel by default, which helps keep the feedback cycle quick.
 
 Install AVA with:
 
@@ -152,9 +153,171 @@ git add -A
 git commit -m 'Automated Testing Infrastructure'
 ```
 
-#### References
-- [AVA](https://github.com/avajs/ava)
-- [npm-scripts](https://docs.npmjs.com/misc/scripts)
+### Serving Files Over HTTP
+A web application that does not require any asset processing can be served using
+an HTTP server that simply responds with the contents of files on the file
+system.
+
+There are many npm packages that provide a HTTP static file server. node-static
+is a popular choice.
+
+Let's start by writing an end-to-end test that starts the server, opens the
+application in a browser, asserts that a piece of text is visible, and stops
+the server and browser.
+
+By convention, Node.js projects use a `start` script to start the server. The
+command run by the script will typically print a url once the server is ready
+to accept requests. The server can be stopped by sending a `SIGTERM` signal to
+the server process.
+
+Here is an example of an adapter that encapsulates starting and stopping the
+server that can be copied into `test/static.js`:
+
+```js
+import {spawn} from 'child_process';
+
+export default class {
+  async start() {
+    this.process = spawn('npm', ['start']);
+    await new Promise((resolve, reject) => {
+      this.process.once('close', () => {
+        reject('Server did not start');
+      });
+      this.process.stdout.on('data', (data) => {
+        if (data.includes('http://127.0.0.1')) {
+          setTimeout(resolve, 1000);
+        }
+      });
+    });
+  }
+
+  async stop() {
+    this.process.kill();
+    await new Promise((resolve) => {
+      if (!this.process.connected) {
+        resolve();
+      }
+      this.process.on('close', resolve);
+    });
+  }
+}
+```
+
+An adapter that encapsulates communication with a browser can be implemented
+using the same strategy. An example implementation has been published as
+[phantomjs-adapter](https://github.com/vinsonchuong/phantomjs-adapter)
+
+In this tutorial, for ease of getting started, we will use phantomjs-adapter.
+Note that phantomjs-adapter is still not very mature and that there are more
+established adapters like WebdriverIO. Install it with:
+
+```sh
+npm install -D phantomjs-adapter
+```
+
+Putting everything together in `test/static.js`:
+
+```js
+import test from 'ava';
+import {spawn} from 'child_process';
+import PhantomJS from 'phantomjs-adapter';
+
+class Server {
+  // ...
+}
+
+const server = new Server();
+const browser = new PhantomJS();
+
+test.before(async () => {
+  await server.start();
+  await browser.open('http://127.0.0.1:8080');
+});
+
+test(async (t) => {
+  const paragraph = await browser.find('p');
+  t.not(paragraph, null);
+  t.is(paragraph.textContent, 'Hello World!');
+});
+
+test.after.always(async () => {
+  await browser.exit();
+  await server.stop();
+});
+```
+
+When we run the test with `npm test`, we get the error message:
+
+```
+1 failed
+
+
+1. before
+Promise rejected with: 'Server did not start'
+```
+
+This makes sense because as of yet, no HTTP server has been installed. Let's
+make the test pass!
+
+Install node-static:
+
+```
+npm install -D node-static
+```
+
+In `package.json`, make the `start` script run the `static` command:
+
+```json
+{
+  "scripts": {
+    "test": "ava",
+    "start": "static"
+  }
+}
+```
+
+Now, when we re-run the test, we the following error message:
+
+```
+1 failed
+
+
+1. before
+failed with "Failed to open http://127.0.0.1:8080"
+```
+
+This makes sense because we've yet to create any files that can be served by
+the server.
+
+Create an `index.html` containing:
+
+```html
+<!doctype html>
+<meta charset="utf-8">
+<p>Hello World!</p>
+```
+
+If we re-run the test, this time it should pass.
+
+When the tests failed, npm may have created debug logs in like
+`test/npm-debug.log`. Clean them up with
+
+```sh
+rm test/npm-debug*
+```
+
+Commit the changes:
+
+```sh
+git add -A
+git commit -m 'Serving Files Over HTTP'
+```
 
 ### References
 - [Walking skeleton](http://alistair.cockburn.us/Walking+skeleton)
+- [AVA](https://github.com/avajs/ava)
+- [npm-scripts](https://docs.npmjs.com/misc/scripts)
+- [node-static](https://github.com/cloudhead/node-static)
+- [Child Process](https://nodejs.org/api/child_process.html)
+- [phantomjs-adapter](https://github.com/vinsonchuong/phantomjs-adapter)
+- [WebdriverIO](http://webdriver.io/)

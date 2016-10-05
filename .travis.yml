@@ -4,3 +4,9 @@ dist: trusty
 language: node_js
 node_js:
   - node
+deploy:
+  provider: surge
+  domain: project.surge.sh
+env:
+  - SURGE_LOGIN=email@example.com
+  - SURGE_TOKEN=token

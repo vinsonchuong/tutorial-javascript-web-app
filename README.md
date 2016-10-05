@@ -371,6 +371,61 @@ git push -u origin master
 
 After doing so, add the repository on Travis CI.
 
+### Continuous Deployment
+Travis CI is capable of deploying to many providers given just login
+credentials. In this tutorial, we will deploy to [Surge.sh](http://surge.sh/).
+Refer to the [documentation](https://docs.travis-ci.com/user/deployment) for
+other providers.
+
+Install `surge`:
+
+```sh
+npm install -g surge
+```
+
+`-g` or `--global` installs the package into your user home directory instead
+of into the current project; this is useful for CLI tools.
+
+Create a Surge.sh account and make your first deployment by running:
+
+```sh
+surge
+```
+
+Configure Travis CI to deploy to Surge.sh by adding to `.travis.yml`:
+
+```yaml
+deploy:
+  provider: surge
+  domain: project.surge.sh
+```
+
+Make sure to change the domain to one that is not already in use.
+
+Generate an API token for Surge.sh by running:
+
+```sh
+surge token
+```
+
+Then, store an encrypted version of the credentials in the `.travis.tml` by
+running:
+
+```sh
+gem install travis
+travis encrypt --add env SURGE_LOGIN='email' SURGE_TOKEN='token'
+```
+
+This assumes that you have a working Ruby installation.
+
+Commit the changes:
+
+```sh
+git add -A
+git commit -m 'Continuous Deployment'
+git push
+```
+
 ### References
 - [Walking skeleton](http://alistair.cockburn.us/Walking+skeleton)
 - [AVA](https://github.com/avajs/ava)
@@ -381,3 +436,5 @@ After doing so, add the repository on Travis CI.
 - [WebdriverIO](http://webdriver.io/)
 - [Building a Node.js project](https://docs.travis-ci.com/user/languages/javascript-with-nodejs/)
 - [The Trusty beta Build Environment](https://docs.travis-ci.com/user/trusty-ci-environment/)
+- [Deployment](https://docs.travis-ci.com/user/deployment)
+- [Surge.sh](http://surge.sh/)

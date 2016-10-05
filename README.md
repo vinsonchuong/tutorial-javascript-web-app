@@ -282,8 +282,11 @@ Now, when we re-run the test, we the following error message:
 1 failed
 
 
-1. before
-failed with "Failed to open http://127.0.0.1:8080"
+1. [anonymous]
+
+t.not(paragraph, null)
+      |
+      null
 ```
 
 This makes sense because we've yet to create any files that can be served by

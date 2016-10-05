@@ -321,6 +321,56 @@ git add -A
 git commit -m 'Serving Files Over HTTP'
 ```
 
+### Continous Integration
+Continuous integration is the foundation on top of which many team and
+deployment workflows can be automated. Contributions from many team mebers can
+be merged, tested, deployed to different environments, and accepted, all
+automatically.
+
+CI software and services all provide the same core functionality of detecting
+commits to a repository, running automated tests on those commits, and deploying
+them to a production or production-like environment. They differ mainly in their
+pricing models, supported technology stacks, and integration with other
+services.
+
+Travis CI is a good choice for open source projects with it's tight integration
+with GitHub. CircleCI is a good choice for new closed source projects due to its
+free pricing tier.
+
+For the purposes of this tutorial, we will be using Travis CI. The steps will
+be similar for other CI services.
+
+Create a `.travis.yml` file containing:
+
+```yaml
+---
+sudo: required
+dist: trusty
+language: node_js
+node_js:
+  - node
+```
+
+The `language` key sets useful defaults like running `npm install` to install
+external dependencies and running `npm test` to run automated tests. The
+`node_js` key specifies the versions of Node.js to build against; `node` is
+a stand-in for the latest stable version of Node.js. The `sudo` and `dist` keys
+configure Travis CI to build within their new Ubuntu 14.04 images, which provide
+a more recent version of gcc/g++ that npm requires to build packages that
+include C extensions.
+
+If you haven't already, now is the time to push the repository to GitHub. Create
+a repository and configure the `origin` remote on your local repository. Then,
+commit your changes and push:
+
+```sh
+git add -A
+git commit -m 'Continuous Integration'
+git push -u origin master
+```
+
+After doing so, add the repository on Travis CI.
+
 ### References
 - [Walking skeleton](http://alistair.cockburn.us/Walking+skeleton)
 - [AVA](https://github.com/avajs/ava)
@@ -329,3 +379,5 @@ git commit -m 'Serving Files Over HTTP'
 - [Child Process](https://nodejs.org/api/child_process.html)
 - [phantomjs-adapter](https://github.com/vinsonchuong/phantomjs-adapter)
 - [WebdriverIO](http://webdriver.io/)
+- [Building a Node.js project](https://docs.travis-ci.com/user/languages/javascript-with-nodejs/)
+- [The Trusty beta Build Environment](https://docs.travis-ci.com/user/trusty-ci-environment/)

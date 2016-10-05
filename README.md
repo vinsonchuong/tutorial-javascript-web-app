@@ -13,9 +13,6 @@ many external packages expect to be present. Ensuring that every environment
 is running the newest current or LTS release is a low cost way to prevent all
 of those issues.
 
-#### References
-- [Installing Node.js via package manager](https://nodejs.org/en/download/package-manager/)
-
 ### Install npm
 Assuming that globally installed npm packages are available on the `PATH`, as
 they would be if Node.js is installed via package manager, run the following
@@ -34,9 +31,18 @@ Because Babel, a commonly used JavaScript compiler has a large number of
 plugin dependencies which depend on each other, `npm install` runs much more
 quickly in version 3.
 
-#### References
+### Install Ruby
+This tutorial uses Travis CI for continuous integration, which publishes a CLI
+tool written in Ruby.
+
+On Linux or OSX, a current version of Ruby should be available via package
+manager.
+
+### References
+- [Installing Node.js via package manager](https://nodejs.org/en/download/package-manager/)
 - [npm v3 Dependency Resolution](https://docs.npmjs.com/how-npm-works/npm3)
 - [Seems like babel-node is running very slow.](https://github.com/babel/babel/issues/2706)
+- [Installing Ruby](https://www.ruby-lang.org/en/documentation/installation)
 
 ## Creating a New Project
 Initialize a Git repository:
@@ -415,8 +421,6 @@ running:
 gem install travis
 travis encrypt --add env SURGE_LOGIN='email' SURGE_TOKEN='token'
 ```
-
-This assumes that you have a working Ruby installation.
 
 Commit the changes:
 

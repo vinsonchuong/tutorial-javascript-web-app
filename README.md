@@ -442,3 +442,155 @@ git push
 - [The Trusty beta Build Environment](https://docs.travis-ci.com/user/trusty-ci-environment/)
 - [Deployment](https://docs.travis-ci.com/user/deployment)
 - [Surge.sh](http://surge.sh/)
+
+## Developer Tooling and Infrastructure
+As it stands, we know have everything needed to build, test, and deploy a
+JavaScript web application.
+
+### Current Capabilities
+Visual styling can be applied by creating a `index.css`:
+
+```css
+p {
+  color: #333;
+  font-size: 24px;
+}
+```
+
+and including it in `index.html`:
+
+```html
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="index.css">
+<p>Hello World!</p>
+```
+
+CSS can be split into different files and included either by adding additional
+`<link>` tags or by using `@import` in an already included CSS file.
+
+JavaScript code can be written in an `index.js`:
+
+```js
+alert('Loaded');
+```
+
+and included in `index.html`:
+
+```html
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="index.css">
+<script async src="index.js"></script>
+<p>Hello World!</p>
+```
+
+Currently, the only way to split logic into multiple JavaScript files and
+include them is by adding additional `<script>` tags. A similar restriction
+exists in AVA, where we would not be able to put the server adapter into
+its own file.
+
+Furthermore, JavaScript has standardized many new features, commonly referred to
+using names like ES6, ES2015, ES2016, ES2017, and ES.Next, that many browsers do
+not support.
+
+In order to be able to split code into multiple files as well as leverage the
+newer features and increasing number of resources about them listed under common
+search queries, let's introduce some asset compilation infrastructure.
+
+Commit these changes:
+
+```sh
+git add -A
+git commit -m 'Current Capabilities'
+git push
+```
+
+### Compiling ES.Next
+Babel is a plugin-based JavaScript compilation framework. It takes in ES.Next
+modules, and compiles them and their imported dependencies into ECMAScript5
+(ES5) code.
+
+Start, by opening `test/static.js` and extracting the server adapter into
+`test/helpers/Server.js`:
+
+```js
+import {spawn} from 'child_process';
+
+export default class {
+  async start() {
+    this.process = spawn('npm', ['start']);
+    await new Promise((resolve, reject) => {
+      this.process.once('close', () => {
+        reject('Server did not start');
+      });
+      this.process.stdout.on('data', (data) => {
+        if (data.includes('http://127.0.0.1')) {
+          setTimeout(resolve, 1000);
+        }
+      });
+    });
+  }
+
+  async stop() {
+    this.process.kill();
+    await new Promise((resolve) => {
+      if (!this.process.connected) {
+        resolve();
+      }
+      this.process.on('close', resolve);
+    });
+  }
+}
+```
+
+Notice that `class Server` changed to `export default class`. `Server.js` is
+now a module that exports a `class` that can be included in `test/static.js` as
+follows:
+
+```js
+import Server from './helpers/Server';
+```
+
+Now when we run the test with `npm test`, we get the following error:
+
+```
+SyntaxError: Unexpected token import
+```
+
+This is because, Node.js does not currently support the `import` or `export`
+keywords. Add support by running:
+
+```sh
+npm install -D babel-register babel-preset-latest babel-plugin-transform-runtime babel-runtime
+```
+
+And adding to `package.json`:
+
+```json
+{
+  "babel": {
+    "presets": ["latest"],
+    "plugins": ["transform-runtime"]
+  },
+  "ava": {
+    "babel": "inherit",
+    "require": ["babel-register"]
+  }
+}
+```
+
+Each new JavaScript feature is compiled using one or more Babel plugins. A Babel
+preset is a group of plugins that are all required by a specific specification
+or usecase. The `latest` preset contains all of the plugins necessary to compile
+all of the new features that are officially released. The `transform-runtime`
+plugin configures Babel to look for new standard library methods and classes in
+the `babel-runtime` package, where otherwise, it would assume them to be present
+already as globals. `babel-register`, when required in a Node.js
+environment, compiles modules at runtime when they are imported.
+
+Running the tests again, they should now pass.
+
+### References
+- [Babel](https://babeljs.io/)
+- [Babel: configuring standard library and helpers](https://leanpub.com/setting-up-es6/read#ch_babel-helpers-standard-library)

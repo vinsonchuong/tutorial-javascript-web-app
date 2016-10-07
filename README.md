@@ -511,7 +511,7 @@ Babel is a plugin-based JavaScript compilation framework. It takes in ES.Next
 modules, and compiles them and their imported dependencies into ECMAScript5
 (ES5) code.
 
-Start, by opening `test/static.js` and extracting the server adapter into
+Start by opening `test/static.js` and extracting the server adapter into
 `test/helpers/Server.js`:
 
 ```js
@@ -589,8 +589,180 @@ the `babel-runtime` package, where otherwise, it would assume them to be present
 already as globals. `babel-register`, when required in a Node.js
 environment, compiles modules at runtime when they are imported.
 
+For AVA, we configure it to use the new Babel configuration as well as load
+`babel-register` so that imported helpers are compiled.
+
 Running the tests again, they should now pass.
+
+Bringing ES.Next compilation to our implementation code is more challenging
+because browsers do not provide a programmatic way to fetch JavaScript code from
+a server, evaluate it, and do the same to imported dependencies. Node.js
+provides such infrastructure, and `babel-register` is simply able to leverage
+and extend it. So, in order to bring ES.Next to the browser, additional
+infrastructure is needed.
+
+To summarize, running ES.Next code in the browser requires a compiler to
+transpile (or translate) ES.Next modules into ES5 code files and a loader to
+get the compiled code into the browser in an order that satisfies every `import`
+statement.
+
+The current most common approach is to transpile ES.Next modules using Babel and
+concatenate the result using webpack into a single file that can be loaded into
+a browser using a `<script>` tag. webpack would provide an implementation of the
+`import` statement that resolves dependencies and executes code in the correct
+order.
+
+Alternative solutions involve running one or both of the transpilation or
+loading steps in the browser or transpiling on-the-fly as modules are requested
+by the browser.
+
+Let's start by removing the dummy text from `index.html`:
+
+```html
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="index.css">
+<script async src="index.js"></script>
+```
+
+We will instead add the text using JavaScript in `index.js`:
+
+```js
+import render from './hello';
+
+render();
+```
+
+Now, inside of `hello.js`:
+
+```js
+export default function() {
+  const paragraph = document.createElement('p');
+  paragraph.textContent = 'Hello World!';
+  document.body.appendChild(paragraph);
+}
+```
+
+If you run the tests, they will fail because no `<p>` tag is rendered to the
+page. This is because the browser is unable to parse the `import` statement
+in `index.js`.
+
+Install webpack:
+
+```sh
+npm install -D webpack webpack-dev-server babel-loader
+npm uninstall -D node-static
+```
+
+babel-loader will transpile ES.next modules (like babel-register), and webpack
+will load them as a single file into the browser. webpack-dev-server replaces
+node-static and will serve static assets as well as transpiled modules.
+
+Change the `start` script in `package.json` to run `webpack-dev-server`:
+
+```json
+{
+  "scripts": {
+    "start": "webpack-dev-server"
+  }
+}
+```
+
+Configure webpack by creating a `webpack.config.js` containing:
+
+```js
+module.exports = {
+  entry: './index.js',
+  output: {
+    filename: 'dist.js'
+  },
+  module: {
+    loaders: [
+      {
+        test: /\.js$/,
+        loader: 'babel-loader',
+        query: {
+          cacheDirectory: true,
+        },
+        exclude: /node_modules/
+      }
+    ]
+  }
+};
+```
+
+`entry` is the path to the file that would be loaded using a `<script>` tag--
+in this case, `index.js`. `output` is the transpiled file that must be loaded
+instead. `loaders` are plugins that process or transpile specific files
+whitelisted using `test` and blacklisted using `exclude`. In this case, we are
+transpiling files with names ending in `.js` with `babel-loader` and not
+transpiling external dependencies. `babel-loader` will use the presets and
+plugins listed in `package.json`, transpiling files in the same way as
+`babel-register` for AVA.
+
+Change `index.html` to load `dist.js` instead of `index.js`:
+
+```html
+<!doctype html>
+<meta charset="utf-8">
+<link rel="stylesheet" href="index.css">
+<script async src="dist.js"></script>
+```
+
+Now, run `npm start`. Notice that when the server is ready for browser requests,
+it outputs:
+
+```
+webpack: bundle is now VALID.
+```
+
+Also, notice that `dist.js` is never saved to the file system but rather served
+in-memory by the webpack-dev-server.
+
+Update `test/helpers/Server.js` to wait for this text instead:
+
+```js
+        if (data.includes('webpack: bundle is now VALID.')) {
+          setTimeout(resolve, 1000);
+        }
+```
+
+If you run the tests, they should now pass.
+
+When deploying, we must ensure that the `dist.js` file is created. `dist.js` can
+be generated and saved by running
+
+```sh
+webpack
+```
+
+`dist.js` should also be excluded from the repository because it can always be
+rebuilt from the actual JavaScript source code:
+
+```sh
+rm dist.js
+```
+
+We can configure Travis CI to create it before deploying by adding to
+`.travis.yml`:
+
+```yaml
+before_deploy:
+  - webpack
+```
+
+Commit these changes:
+
+```sh
+git add -A
+git commit -m 'Compiling ES.Next'
+git push
+```
 
 ### References
 - [Babel](https://babeljs.io/)
 - [Babel: configuring standard library and helpers](https://leanpub.com/setting-up-es6/read#ch_babel-helpers-standard-library)
+- [webpack Dev Server](https://webpack.github.io/docs/webpack-dev-server.html)
+- [webpack Configuration](https://webpack.github.io/docs/configuration.html)
+- [babel-loader](https://github.com/babel/babel-loader)
+- [Travis CI: Customizing the Build](https://docs.travis-ci.com/user/customizing-the-build#Deploying-your-Code)

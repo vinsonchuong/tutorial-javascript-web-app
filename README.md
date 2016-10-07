@@ -737,10 +737,10 @@ webpack
 ```
 
 `dist.js` should also be excluded from the repository because it can always be
-rebuilt from the actual JavaScript source code:
+rebuilt from the actual JavaScript source code. Add to `.gitignore`:
 
 ```sh
-rm dist.js
+/dist.js
 ```
 
 We can configure Travis CI to create it before deploying by adding to
@@ -749,6 +749,8 @@ We can configure Travis CI to create it before deploying by adding to
 ```yaml
 before_deploy:
   - webpack
+deploy:
+  skip_cleanup: true
 ```
 
 Commit these changes:

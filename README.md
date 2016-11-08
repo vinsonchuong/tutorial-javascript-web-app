@@ -519,7 +519,7 @@ import {spawn} from 'child_process';
 
 export default class {
   async start() {
-    this.process = spawn('npm', ['start']);
+    this.process = spawn('setsid', ['npm', 'start']);
     await new Promise((resolve, reject) => {
       this.process.once('close', () => {
         reject('Server did not start');
@@ -533,7 +533,7 @@ export default class {
   }
 
   async stop() {
-    this.process.kill();
+    process.kill(-this.process.pid);
     await new Promise((resolve) => {
       if (!this.process.connected) {
         resolve();
